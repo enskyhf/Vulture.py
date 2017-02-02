@@ -1,4 +1,4 @@
-import sqlite3, win32crypt, getpass, os argparse
+import sqlite3, win32crypt, getpass, os, argparse
 import urllib.parse, urllib.request
 from tempfile import gettempdir
 from subprocess import Popen
