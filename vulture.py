@@ -18,7 +18,8 @@ class Bird:
 		copy(PATH, gettempdir())
 
 		# SQLite Connection
-		conn = sqlite3.connect(PATH + '\\Login Data')
+		temp = gettempdir() + '//Login Data'
+		conn = sqlite3.connect(PATH + temp)
 		cur = conn.cursor()
 
 		user_data = None
